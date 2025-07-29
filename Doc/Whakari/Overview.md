@@ -1,84 +1,78 @@
-# Whāriki
 
-> *Whāriki: To cover with a mat, spread out on the ground. (woven flax mat, often metaphorically foundational)*
+# Overview
 
-This project aims to enhance the Cardano Node's storage layer by integrating `irmin-pack`, a highly efficient, Git-like on-disk storage system. The primary goal is to drastically reduce the node's memory footprint and improve its overall performance, thereby enabling a single node to efficiently manage data for multiple Cardano networks (e.g., `testnet`, `devnets`, and `mainnet`).
+This project aims to be an alternative choice to the Cardano Node's storage layer by integrating `irmin-pack`, a highly efficient, on-disk storage engine with git's design principles in mind. The primary goal is to  reduce the node's memory footprint and improve its overall performance, thereby enabling a single node to efficiently manage and validate transactions on machines with limited resources and on single-board computers for example a raspberry pi.
 
 ## Description
 
-The Cardano Node currently stores a significant portion of its chain data in-memory, which leads to high memory consumption. While recent efforts have introduced a Log-Structured Merge-tree (LSM-tree) implementation with an LMDB backend to mitigate this, the pursuit of optimal performance and resource utilisation for a rapidly growing blockchain necessitates further innovation. This project proposes leveraging `irmin-pack`, known for its compact storage and efficient data management in other blockchain contexts, as an alternative backend. The integration will utilise `irmin-rs` bindings for a Rust-based approach, focusing on a robust and performant solution for on-disk storage.
-
+The Cardano Node currently stores a significant portion of its chain data in-memory, which leads to high memory consumption. While the node (currently maintained by intersectMBO another being built by Pragma in Rust) have introduced a Log-Structured Merge-tree (LSM-tree) implementation using an LMDB backend, the pursuit of optimal performance and resource utilisation for a rapidly growing blockchain necessitates further inquiry for alternatives as the problem stems beyond storing digital distributed ledgers. This project proposes leveraging `irmin-pack`, known for its compact storage and efficient data management, as an alternative backend.
 ## Brief/Why
 
 The decision to explore `irmin-pack` stems from several key motivations:
 
-- **Memory Footprint Reduction**: The existing in-memory storage of chain data in the Cardano Node is a significant bottleneck. `irmin-pack` has demonstrated the ability to dramatically reduce the size of large objects on disk, such as bringing down a 250GB Tezos chain to just 20GB, while maintaining low memory usage (e.g., 1GB) and low latency for reads and writes. This is a critical factor for scalability and operational efficiency.
-- **Performance Improvement**: `irmin-pack`'s design, inspired by Git, offers efficient content-addressable storage. It utilises functional data structures and optimises for flash storage, which aligns well with modern hardware characteristics. The "Monkey" paper highlights how optimal LSM-tree design can significantly improve lookup latency and overall throughput.
-- **Multi-Network Operation**: By significantly reducing resource consumption, this project aims to enable a single Cardano Node instance to run and validate multiple networks concurrently (e.g., `testnet`, `devnet`, and `mainnet`), leading to more efficient development, testing, and operational workflows.
-- **Addressing Current Limitations**: While the `lsm-tree` project has been introduced, `irmin-pack` offers a potentially more effective approach to persistent, low-footprint storage for complex data structures like a blockchain ledger. Projects like `Amaru`, a Rust-based Cardano node, currently rely on RocksDB for storage; this project could offer a superior alternative.
+- **Memory Reduction**: The existing in-memory storage of chain data in the Cardano Node is a significant bottleneck. `irmin-pack` has demonstrated the ability to dramatically reduce the size of large objects on disk, such as bringing down a 250GB `Tezos` chain to just 20GB, while maintaining low memory usage (e.g., 1GB) and low latency for reads and writes. This is a critical factor for scalability and operational efficiency.
+- **Performance**: `irmin-pack`'s design, inspired by Git, offers efficient content-addressable storage. It utilises functional data structures and optimises for non-volatile memory, which aligns well with modern hardware characteristics.
+### Addressing Current Limitations
 
+While the `UTxO-HD` feature has been introduced as of `cardano-node-v10.4.1`, `irmin-pack` offers a potentially more effective approach to persistent, low-footprint storage for complex data structures like a blockchain ledger but also has properties that could extend to areas that involve large data-sets with no locality. Projects like `Amaru`, a Rust-based Cardano node, currently rely on RocksDB for storage; this project could offer a highly effective alternative.
 ## Current Problems
 
 The current Cardano Node architecture faces several challenges related to data storage:
 
 - **High Memory Consumption**: Storing all chain data in-memory is resource-intensive, limiting the node's scalability and increasing operational costs.
-- **Suboptimal Disk Utilisation**: While LSM-trees are being adopted, existing implementations may not be fully optimised for modern hardware, leading to suboptimal performance trade-offs between lookup and update costs.
-- **Complexity of Historical States**: Efficiently reconstructing historical ledger states can be expensive if not all past states are kept in memory. The current approach of keeping 'k' past ledger states in memory, while memory-efficient, still needs robust disk-based solutions for very large data sets.
-- **Lack of Unified Multi-Network Support**: Running multiple Cardano networks on a single node is currently impractical due to resource constraints.
+- **Suboptimal Disk Utilisation**: While LSM-trees are being adopted, existing implementations may not be fully optimised for different types of hardware, leading to suboptimal performance trade-offs between lookup and update costs.
+- **Complexity of Historical States**: Efficiently reconstructing historical ledger states can be expensive if not all past states are kept in memory. The current approach of keeping 'k' past ledger states in memory, while memory-efficient, still needs robust disk-based solutions for persistence across very large data sets.
+- **Lack of Unified Multi-Network Support**: Running multiple Cardano networks on a single node is currently impractical due to it's current resource constraints.
 
 ## Goals / Outcomes
 
 Upon successful completion, this project will deliver:
 
-- **Reduced Memory Footprint**: A significant decrease in the Cardano Node's RAM usage by offloading cold chain data to highly optimised on-disk storage.
+- **Proof of Concept**: A working integration of `irmin-pack` with a basic Cardano Node implementation to test feasibility and performance.
+- **Reduced Memory**: A significant decrease in the Cardano Node's RAM usage by offloading cold chain data to highly optimised on-disk storage.
 - **Improved Performance**: Enhanced read and write throughput, and reduced lookup latency for blockchain data, crucial for block validation and synchronisation.
+- **A Reliable Storage Layer**: A durable and reliable on-disk storage layer leveraging `irmin-pack`'s atomic write guarantees and integrity checks.
 - **Multi-Network Capability**: A single Cardano Node capable of supporting multiple network instances (`testnet`, `devnet`, `mainnet`) simultaneously and efficiently.
-- **Robust Storage Solution**: A durable and reliable on-disk storage layer leveraging `irmin-pack`'s atomic write guarantees and corruption prevention mechanisms.
-- **Proof of Concept**: A working integration of `irmin-pack` with a basic Cardano Node implementation to demonstrate feasibility and performance gains.
 
 ## Recommended Approach
 
-The recommended approach involves a multi-faceted strategy, drawing inspiration and techniques from various sources:
+The recommended approach involves, drawing inspiration and techniques from various sources:
 
 1. **`Irmin-pack` Integration**:
     - Utilise `irmin-pack` as the core on-disk storage engine.
     - Develop Rust bindings (`irmin-rs`) or adapt existing ones to interface the Cardano Node's core logic with `irmin-pack`.
-    - Focus on `irmin-pack`'s ability to handle fixed-length keys and bounded-length values, which can be extended for variable-length keys using layering10.
-1. **Flash-Aware Design Principles (from `Wodan`)**:
+    - Focus on `irmin-pack`'s ability to handle fixed-length keys and bounded-length values, which can be extended for variable-length keys using layering.
+2. **Flash-Aware Design Principles (from `Wodan`)**:
     - Incorporate concepts from "`Wodan`: a pure OCaml, flash-aware filesystem library".
     - Align block sizes with flash erase blocks to prevent write amplification.
     - Implement checksums (e.g., CRC32C) for every block to prevent torn writes and detect data corruption.
     - Adopt strategies for fast mounting and recovery by logging in-use bitmaps periodically.
     - Leverage "hitchhiker trees" (a functional variant of Bepsilon-trees) for atomic and efficient write operations, especially on flash media.
-1. **LSM-tree Optimisation Insights (from Monkey)**:
-    - Apply principles from "Monkey: Optimal Navigable Key-Value Store" for optimal memory allocation for Bloom filters. This means dynamically adjusting false positive rates across different levels of the LSM-tree to minimise lookup costs, rather than assigning a fixed bits-per-element.
-    - Consider how to balance memory allocation between the buffer and Bloom filters to optimise throughput based on workload characteristics.
-    - Explore how merge policies (levelling vs. tiering) and size ratios can be dynamically tuned to maximise throughput for specific workloads.
-1. **Cardano Consensus and Storage Layer Context**:
+3. **Cardano Consensus and Storage Layer Context**:
     - Understand the existing "Immutable DB" and "Volatile DB" split within Cardano's storage layer. The new `irmin-pack` based solution might replace or integrate with these components.
     - Address the challenges of maintaining consistency and historical ledger states, including efficient reconstruction of past ledger states.
-    - Consider the security parameter 'k' and its implications on maximum rollback and data stability.
+    - Consider the 'k' parameter and its implications on maximum rollback and data stability.
     - Evaluate how the new storage impacts non-functional requirements such as predictable performance and resource requirements.
 
 ## Scope
 
 The initial phase of this project will focus on:
 
-- **Core `irmin-pack` Integration**: Implementing the fundamental read and write operations to `irmin-pack` for core blockchain data (blocks, headers, ledger states).
-- **Basic Performance Benchmarking**: Establishing baseline metrics for memory usage, read/write latency, and throughput compared to the existing storage solutions.
-- **Proof of Concept for Multi-Network**: Demonstrating the ability to run two distinct Cardano networks on a single node instance with reduced resource contention.
-- **Addressing Critical Data Structures**: Focusing on key-value storage of ledger state and transactions.
+- **Core `irmin-pack` Integration**: Implementing the fundamental read and write operations to `irmin-pack` for core blockchain data (blocks, headers, ledger states etc).
+- **Benchmarking**: Establishing baseline metrics for memory usage, read/write latency, and throughput compared to the existing storage solutions.
+- **Addressing Critical Data Structures Layouts**: Focusing on key-value storage of ledger state and transactions.
 
 Out of scope for the initial phase:
 
 - Full integration with all existing Cardano Node components (e.g., specific mini-protocols beyond what's strictly necessary for core functionality).
+- Demonstrating the ability to run two distinct Cardano networks on a single node instance with reduced resource contention.
 - Advanced caching strategies within `irmin-pack` beyond its native capabilities.
 - Migration tools for existing Cardano Node databases to the new `irmin-pack` format.
 - Comprehensive UI or command-line tooling for managing the `irmin-pack` backend.
 
-Subsequent phases will expand on full integration, advanced features, and comprehensive testing across diverse workloads and hardware configurations.
+Subsequent phases will expand on full integration, advanced features, and testing across diverse workloads and hardware configurations.
 
-## References 
+## References
 
 - [High level overview of UTxO-HD | Ouroboros Consensus](https://ouroboros-consensus.cardano.intersectmbo.org/docs/for-developers/utxo-hd/Overview)
 - [pragma-org/amaru](https://github.com/pragma-org/amaru?tab=readme-ov-file)
