@@ -1,0 +1,17 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+description = "An on-disk storage solution for the Cardano Node"
+license = "MIT"
+authors = ["Jack OBrien <jack.obrien@yumi.ai>"]
+repository = "https://github.com/PardusEidolon/Whariki"
+homepage = "https://github.com/PardusEidolon/Whariki"
+rust-version = "1.88"
+
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+default-members = ["crates/*"]
+
+[workspace.dependencies]
+whakari-core = { path = "../../crates/whakari-core" }

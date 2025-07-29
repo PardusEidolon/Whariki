@@ -1,0 +1,50 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+description = "An on-disk storage solution for the Cardano Node"
+license = "MIT"
+authors = ["Jack OBrien <jack.obrien@yumi.ai>"]
+repository = "https://github.com/PardusEidolon/Whariki"
+homepage = "https://github.com/PardusEidolon/Whariki"
+rust-version = "1.88"
+
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+default-members = ["crates/*"]
+
+[workspace.lints.clippy]
+
+# Group lints
+
+# pedantic = "warn"
+# restriction = "warn"
+# nursery = "warn"
+# cargo = "warn"
+# others are enabled by default, see table here: https://doc.rust-lang.org/clippy/
+
+# Individual lints
+
+# All lints are detailed here: https://rust-lang.github.io/rust-clippy/master/index.html
+# allow-unwrap-in-tests = true
+# unreachable = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unwrap_used = "warn"
+wildcard_enum_match_arm = "warn"
+
+[profile.dev]
+opt-level = 2
+debug = false
+
+[profile.dev-debug]
+# Restore default 'dev' profile (see https://doc.rust-lang.org/cargo/reference/profiles.html#dev)
+inherits = "dev"
+opt-level = 0
+debug = true
+
+
+[profile.release]
+lto = true
+codegen-units = 1

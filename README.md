@@ -4,6 +4,17 @@
 
 This repository explores the integration of `irmin-pack` as a highly efficient, on-disk storage solution for the Cardano Node. The primary goal is to significantly reduce the node's memory footprint and enhance its overall performance, enabling support for multiple Cardano networks (e.g., testnet, devnet, mainnet) on a single instance.
 
+## Getting Started
+
+### Installing
+
+> [!NOTE]
+> Developer environments pair well with [`Direnv`](https://direnv.net/) and [`Nix`](https://docs.determinate.systems/determinate-nix/).
+
+```console
+cargo build
+```
+
 ## Goals
 
 * **Reduce Memory Footprint**: Transition critical chain data to disk to lower RAM consumption.
